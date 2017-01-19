@@ -147,7 +147,7 @@ async function runSearch(mons, pokemonsFound, pokemonsInRange) {
   let found = await searchPokemon(mons)
   d.found(`${found.length} found`)
 
-  let inRange = found.length ? await pokemonsFound(found) : null
+  let inRange = found.length ? await pokemonsFound(found) : []
   d.range(`${inRange.length} found in range`)
 
   pokemonsInRange(inRange)
