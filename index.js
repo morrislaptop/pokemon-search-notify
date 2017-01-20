@@ -13,7 +13,7 @@ let moment = require('moment')
 
 let d = {
   start: debug('start'),
-  found: debug('found'),which
+  found: debug('found'),
   range: debug('range'),
   transit: debug('transit')
 }
