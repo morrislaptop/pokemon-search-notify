@@ -9,11 +9,13 @@ let util = require('util')
 let path = require('path')
 let program = require('commander')
 let debug = require('debug')
+let moment = require('moment')
 
 let d = {
   start: debug('start'),
   found: debug('found'),
-  range: debug('range')
+  range: debug('range'),
+  transit: debug('transit')
 }
 
 program
@@ -99,8 +101,13 @@ async function pokemonsFound(mons) {
       cycling: cyclingTimes[i]
     }
 
+    // Debug
+    d.transit(monMessage({ mon, mode: 'transit', time: transitTimes[i] }))
+    d.transit(monMessage({ mon, mode: 'walking', time: walkingTimes[i] }))
+    d.transit(monMessage({ mon, mode: 'cycle', time: cyclingTimes[i] }))
+
     // Gets the key of the lowest time
-    let mode = _.min(Object.keys(times), key => times[key])
+    let mode = _.minBy(Object.keys(times), key => times[key])
 
     // Return mon with mode of travel and time required
     return {
@@ -111,12 +118,29 @@ async function pokemonsFound(mons) {
   })
 
   mons = mons.filter(mon => {
-    let arrival = Date.now() / 1000 + mon.time
+    // Debug
+    d.found(monMessage(mon))
 
+    let arrival = Date.now() / 1000 + mon.time
     return arrival < mon.mon.despawn
   });
 
   return Promise.resolve(mons)
+}
+
+/**
+ * e.g. Aerodactyl found 14 mins away by cycle, despawning in 13 minutes
+ *
+ * @param  {[type]} mon [description]
+ * @return {[type]}     [description]
+ */
+function monMessage(mon) {
+
+  let now = Date.now () / 1000
+  let despawn = moment.duration(mon.mon.despawn - now, 'seconds')
+  let arrival = moment.duration(mon.time, 'seconds')
+
+  return `${pokemonById[mon.mon.pokemon_id].name} found ${arrival.humanize()} away by ${mon.mode}, despawing in ${despawn.humanize()}`
 }
 
 async function pokemonsInRange(mons) {
@@ -125,7 +149,8 @@ async function pokemonsInRange(mons) {
 
     let mins = Math.ceil(mon.time / 60);
 
-    d.range(`${pokemonById[mon.mon.pokemon_id].name} ${mins} mins away by ${mon.mode}`)
+    // Debug
+    d.range(monMessage(mon))
 
     notifier.notify({
       title: pokemonById[mon.mon.pokemon_id].name,
